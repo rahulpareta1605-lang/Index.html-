@@ -3,222 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gemini 2.0 Ultra - Fast AI</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- React & Babel for Single File -->
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    
-    <script type="module">
-        // Specific configuration requested by user
-        const apiKey = 'AIzaSyBeGWkJhOHH0dYlt2Mevwt0RT2UCTf22Ok';
-        const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey;
+    <title>Gemini 2.0 - Suraj Edition</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #121212; color: white; display: flex; flex-direction: column; height: 100vh; margin: 0; }
+        #chat-box { flex: 1; overflow-y: auto; padding: 20px; }
+        .input-area { padding: 20px; background: #1e1e1e; display: flex; gap: 10px; }
+        input { flex: 1; padding: 10px; border-radius: 5px; border: none; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        .user { color: #00ffcc; margin-bottom: 10px; }
+        .ai { color: #ffffff; margin-bottom: 20px; background: #333; padding: 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div id="chat-box"></div>
+    <div class="input-area">
+        <input type="text" id="userInput" placeholder="Ask Suraj AI anything...">
+        <button onclick="sendMessage()">Send</button>
+    </div>
 
-        async function sendMessage(userMessage) {
+    <script>
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const chatBox = document.getElementById('chat-box');
+            const message = input.value;
+            if (!message) return;
+
+            // Display User Message
+            chatBox.innerHTML += `<div class="user"><b>You:</b> ${message}</div>`;
+            input.value = '';
+
+            const aiMsgDiv = document.createElement('div');
+            aiMsgDiv.className = 'ai';
+            aiMsgDiv.innerHTML = "<b>Gemini:</b> Thinking...";
+            chatBox.appendChild(aiMsgDiv);
+
+            const apiKey = "AIzaSyBeGWkJhOHH0dYlt2Mevwt0RT2UCTf22Ok";
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+
             try {
                 const response = await fetch(url, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        contents: [{
-                            parts: [{
-                                text: userMessage
-                            }]
-                        }]
+                        contents: [{ parts: [{ text: message }] }]
                     })
                 });
 
                 const data = await response.json();
-
-                if (!response.ok) {
-                    console.error("API Error:", data);
-                    return `⚠️ API Error (${response.status}): ${data.error?.message || "Invalid request format or API key issue."}`;
-                }
-
-                if (data.candidates && data.candidates[0].content) {
-                    return data.candidates[0].content.parts[0].text;
+                if (data.candidates && data.candidates[0].content.parts[0].text) {
+                    aiMsgDiv.innerHTML = `<b>Gemini:</b> ${data.candidates[0].content.parts[0].text}`;
                 } else {
-                    return "⚠️ Received an empty or unexpected response from the API.";
+                    aiMsgDiv.innerHTML = "<b>Gemini:</b> Error in response format.";
                 }
             } catch (error) {
-                console.error("Network Error:", error);
-                return `⚠️ Network Error: ${error.message}. Please check your connection or CORS settings.`;
+                aiMsgDiv.innerHTML = "<b>Gemini:</b> Connection Failed. Check your Internet or API Key.";
+                console.error(error);
             }
+            chatBox.scrollTop = chatBox.scrollHeight;
         }
-        
-        // Expose to the React component
-        window.geminiFetch = sendMessage;
-    </script>
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        .glass-effect { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); }
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e5e5e5; border-radius: 10px; }
-    </style>
-</head>
-<body class="bg-[#f9f9f9]">
-    <div id="root"></div>
-
-    <script type="text/babel" data-type="module">
-        const { useState, useEffect, useRef } = React;
-
-        const App = () => {
-            const [messages, setMessages] = useState([
-                { role: 'model', content: "Hello! I am Gemini 2.0 Ultra. How can I help you today?", timestamp: Date.now() }
-            ]);
-            const [input, setInput] = useState('');
-            const [isLoading, setIsLoading] = useState(false);
-            const messagesEndRef = useRef(null);
-
-            const scrollToBottom = () => {
-                messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-            };
-
-            useEffect(() => {
-                scrollToBottom();
-                if (window.lucide) window.lucide.createIcons();
-            }, [messages]);
-
-            const handleSend = async () => {
-                if (!input.trim() || isLoading) return;
-                
-                const userMsg = { role: 'user', content: input, timestamp: Date.now() };
-                setMessages(prev => [...prev, userMsg]);
-                setInput('');
-                setIsLoading(true);
-
-                try {
-                    const text = await window.geminiFetch(input);
-                    setMessages(prev => [...prev, { role: 'model', content: text, timestamp: Date.now() }]);
-                } catch (error) {
-                    console.error(error);
-                } finally {
-                    setIsLoading(false);
-                }
-            };
-
-            const handleExport = (format) => {
-                let content = '';
-                let mimeType = '';
-                let extension = '';
-
-                if (format === 'json') {
-                    content = JSON.stringify({ messages }, null, 2);
-                    mimeType = 'application/json';
-                    extension = 'json';
-                } else {
-                    content = messages.map(msg => `[${msg.role.toUpperCase()}]: ${msg.content}`).join('\n\n');
-                    mimeType = 'text/plain';
-                    extension = 'txt';
-                }
-
-                const blob = new Blob([content], { type: mimeType });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `chat-export.${extension}`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            };
-
-            return (
-                <div className="flex h-screen overflow-hidden">
-                    {/* Sidebar */}
-                    <div className="w-64 bg-white border-r border-gray-200 flex flex-col hidden md:flex">
-                        <div className="p-6">
-                            <h2 className="text-xl font-bold flex items-center gap-2">
-                                <span className="p-1 bg-black text-white rounded">G</span> Gemini 2.0
-                            </h2>
-                        </div>
-                        <div className="flex-1 overflow-y-auto px-4">
-                            <button className="w-full flex items-center gap-2 p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium hover:bg-gray-100 transition-all mb-4">
-                                <i data-lucide="plus" className="w-4 h-4"></i> New Chat
-                            </button>
-                            <div className="space-y-1">
-                                <button onClick={() => handleExport('txt')} className="w-full flex items-center gap-2 p-3 hover:bg-gray-50 rounded-xl text-sm text-gray-600">
-                                    <i data-lucide="file-text" className="w-4 h-4 text-blue-500"></i> Export TXT
-                                </button>
-                                <button onClick={() => handleExport('json')} className="w-full flex items-center gap-2 p-3 hover:bg-gray-50 rounded-xl text-sm text-gray-600">
-                                    <i data-lucide="file-json" className="w-4 h-4 text-orange-500"></i> Export JSON
-                                </button>
-                            </div>
-                        </div>
-                        <div className="p-4 border-t border-gray-100 italic text-[10px] text-gray-400 text-center">
-                            Gemini 1.5 Flash Engine
-                        </div>
-                    </div>
-
-                    {/* Main Chat Area */}
-                    <div className="flex-1 flex flex-col bg-white relative">
-                        {/* Header */}
-                        <div className="p-4 border-b border-gray-100 flex justify-between items-center glass-effect sticky top-0 z-10">
-                            <h3 className="font-semibold text-gray-700">Gemini 2.0 Ultra</h3>
-                        </div>
-
-                        {/* Messages */}
-                        <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 custom-scrollbar">
-                            <div className="max-w-3xl mx-auto space-y-6">
-                                {messages.map((msg, i) => (
-                                    <div key={i} className={`flex gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${msg.role === 'user' ? 'bg-gray-100' : 'bg-black text-white'}`}>
-                                            <i data-lucide={msg.role === 'user' ? 'user' : 'bot'} className="w-5 h-5"></i>
-                                        </div>
-                                        <div className={`p-4 rounded-2xl max-w-[85%] ${msg.role === 'user' ? 'bg-black text-white rounded-tr-none' : 'bg-gray-50 border border-gray-100 rounded-tl-none shadow-sm'}`}>
-                                            <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
-                                        </div>
-                                    </div>
-                                ))}
-                                {isLoading && (
-                                    <div className="flex gap-4">
-                                        <div className="w-8 h-8 bg-black text-white rounded-lg flex items-center justify-center animate-pulse">
-                                            <i data-lucide="bot" className="w-5 h-5"></i>
-                                        </div>
-                                        <div className="p-4 bg-gray-50 border border-gray-100 rounded-2xl rounded-tl-none animate-pulse">
-                                            <div className="h-3 w-12 bg-gray-200 rounded"></div>
-                                        </div>
-                                    </div>
-                                )}
-                                <div ref={messagesEndRef} />
-                            </div>
-                        </div>
-
-                        {/* Input Area */}
-                        <div className="p-4 md:p-6 bg-white border-t border-gray-100">
-                            <div className="max-w-3xl mx-auto relative">
-                                <textarea 
-                                    value={input}
-                                    onChange={(e) => setInput(e.target.value)}
-                                    onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())}
-                                    placeholder="Type your message..."
-                                    className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 pr-12 focus:outline-none focus:ring-2 focus:ring-black/5 min-h-[56px] max-h-40 resize-none text-sm transition-all shadow-sm"
-                                    rows="1"
-                                />
-                                <button 
-                                    onClick={handleSend}
-                                    disabled={!input.trim() || isLoading}
-                                    className="absolute right-3 bottom-3 p-2 bg-black text-white rounded-xl hover:bg-gray-800 disabled:bg-gray-200 transition-all active:scale-95 shadow-lg"
-                                >
-                                    <i data-lucide="send" className="w-4 h-4"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            );
-        };
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
     </script>
 </body>
 </html>
