@@ -3,6 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini 2.0 Ultra - Fast AI</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- React & Babel for Single File -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <script type="module">
+        // Specific configuration requested by user
+        const apiKey = 'AIzaSyBeGWkJhOHH0dYlt2Mevwt0RT2UCTf22Ok';
+        const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey;
+
+        async function sendMessage(userMessage) {
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: userMessage
+                            }]
+                        }]
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    console.error("API Error:", data);
+                    return `⚠️ API Error (${response.status}): ${data.error?.message || "Invalid request format or API key issue."}`;
+                }
+
+                if (data.candidates && data.candidates[0].content) {
+                    return data.candidates[0].content.parts[0].text;
+                } else {
+                    return "⚠️ Received an empty or unexpected response from the API.";
+                }
+            } catch (error) {
+                console.error("Network Error:", error);
+                return `⚠️ Network Error: ${error.message}. Please check your connection or CORS settings.`;
+            }
+        }
+        
+        // Expose to the React component
+        window.geminiFetch = sendMessage;
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .glass-effect { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e5e5e5; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-[#f9f9f9]">
+    <div id="root"></div>
+
+    <script type="text/babel" data-type="module">
+        const { useState, useEffect, useRef } = React;
+
+        const App = () => {
+            const [messages, setMessages] = useState([
+                { role: 'model', content: "Hello! I am Gemini 2.0 Ultra. How can I help you today?", timestamp: Date.now() }
+            ]);
+            const [input, setInput] = useState('');
+            const [isLoading, setIsLoading] = useState(false);
+            const messagesEndRef = useRef(null);
+
+            const scrollToBottom = () => {
+                messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+            };
+
+            useEffect(() => {
+                scrollToBottom();
+                if (window.lucide) window.lucide.createIcons();
+            }, [messages]);
+
+            const handleSend = async () => {
+                if (!input.trim() || isLoading) return;
+                
+                const userMsg = { role: 'user', content: input, timestamp: Date.now() };
+                setMessages(prev => [...prev, userMsg]);
+                setInput('');
+                setIsLoading(true);
+
+                try {
+                    const text = await window.geminiFetch(input);
+                    setMessages(prev => [...prev, { role: 'model', content: text, timestamp: Date.now() }]);
+                } catch (error) {
+                    console.error(error);
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+
+            const handleExport = (format) => {
+                let content = '';
+                let mimeType = '';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gemini 2.0 - Ultra Fast AI</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
